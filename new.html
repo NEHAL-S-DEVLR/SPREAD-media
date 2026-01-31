@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPREAD Media | Premium Digital Experience</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+        
+        :root {
+            --spread-red: #ff3333;
+            --liquid-bg: #030712;
+            --glass-white: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-glow: rgba(255, 51, 51, 0.4);
+        }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: var(--liquid-bg);
+            color: white;
+            overflow-x: hidden;
+            cursor: none; 
+            scroll-behavior: smooth;
+        }
+
+        /* --- ENTRANCE PAGE (GLASS OVERLAY) --- */
+        #entrance-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(50px);
+            transition: all 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+        }
+
+        .entrance-glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            padding: 4rem;
+            border-radius: 60px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .exit-active {
+            transform: translateY(-100%) scale(1.1);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- LIQUID BACKGROUND ENGINE --- */
+        #liquid-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: -1;
+            filter: blur(80px); 
+            opacity: 0.6;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- CUSTOM LIQUID CURSOR --- */
+        #cursor-dot {
+            width: 8px; height: 8px;
+            background-color: #fff;
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10001;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px #fff;
+        }
+
+        #cursor-blur {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(255, 51, 51, 0.2) 0%, rgba(255, 51, 51, 0) 70%);
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+
+        /* --- LIQUID GLASS COMPONENTS --- */
+        .liquid-glass {
+            background: var(--glass-white);
+            backdrop-filter: blur(15px) saturate(160%);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .liquid-glass:hover {
+            transform: translateY(-10px);
+            border-color: #e11d48; /* rose-600 */
+            background: rgba(225, 29, 72, 0.05);
+            box-shadow: 0 0 40px rgba(225, 29, 72, 0.1);
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .glass-text {
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.4) 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .red-gradient {
+            background: linear-gradient(90deg, #ff0000, #ff6b6b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes pulse-logo {
+            0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--spread-red)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px var(--spread-red)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--spread-red)); }
+        }
+        .pulse-logo { animation: pulse-logo 3s infinite ease-in-out; }
+
+        @keyframes bounce-slow {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-8px); }
+        }
+        .scroll-indicator { animation: bounce-slow 2s infinite; }
+
+        .floating {
+            animation: float-anim 6s ease-in-out infinite;
+        }
+        @keyframes float-anim {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-30px) rotate(1deg); }
+        }
+
+        /* --- NAV BLUR --- */
+        .nav-liquid {
+            background: rgba(3, 7, 18, 0.6);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e11d48; }
+    </style>
+</head>
+<body class="overflow-hidden"> 
+    
+    <section id="entrance-screen">
+        <div class="entrance-glass-card floating">
+            <div class="mb-10 pulse-logo">
+                <div class="w-28 h-28 bg-rose-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(255,0,0,0.5)]">
+                    <i class="fas fa-dove text-white text-5xl"></i>
+                </div>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-4 glass-text">
+                SPREAD <span class="text-rose-600">MEDIA</span>
+            </h1>
+            <p class="text-gray-400 font-bold uppercase tracking-[0.5em] text-sm mb-12">Reaching People. Growing Business.</p>
+            
+            <button onclick="siteEntry()" class="bg-rose-600 text-white px-16 py-6 rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-white hover:text-rose-600 transition-all duration-700 shadow-2xl relative overflow-hidden group">
+                <span class="relative z-10">Enter Experience</span>
+                <div class="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+            </button>
+        </div>
+
+        <div class="scroll-indicator mt-12 text-gray-500">
+            <i class="fas fa-chevron-down text-3xl"></i>
+        </div>
+    </section>
+
+    <canvas id="liquid-canvas"></canvas>
+
+    <div id="cursor-dot"></div>
+    <div id="cursor-blur"></div>
+
+    <nav class="fixed w-full z-50 nav-liquid px-8 py-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 bg-rose-600 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-dove text-white text-xs"></i>
+                </div>
+                <div class="text-2xl font-black tracking-tighter uppercase">SPREAD <span class="text-rose-600">MEDIA</span></div>
+            </div>
+            <div class="hidden md:flex space-x-12 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <a href="#about" class="hover:text-rose-500 transition-colors">The Story</a>
+                <a href="#services" class="hover:text-rose-500 transition-colors">Expertise</a>
+                <a href="#packages" class="hover:text-rose-500 transition-colors">Investment</a>
+                <a href="#onboarding" class="hover:text-rose-500 transition-colors">Onboarding</a>
+            </div>
+            <a href="https://wa.me/918139931940" class="bg-white text-black px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all duration-500">Kickstart Project</a>
+        </div>
+    </nav>
+
+    <main id="main-site">
+        
+        <section class="min-h-screen flex items-center pt-24 px-8">
+            <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-20 items-center">
+                <div data-aos="fade-right" data-aos-duration="1500">
+                    <h2 class="text-[12px] font-black text-rose-600 uppercase tracking-[0.8em] mb-8">Digital Momentum</h2>
+                    <h1 class="text-7xl md:text-[10rem] font-black leading-[0.8] mb-12 tracking-tighter">
+                        REACHING<br><span class="red-gradient">PEOPLE.</span>
+                    </h1>
+                    <p class="text-xl text-gray-400 mb-12 max-w-lg leading-relaxed">
+                        We don't just post content; we engineer visibility. Spread Media specializes in building reputations for cafes, gyms, and local startups.
+                    </p>
+                    <div class="flex flex-wrap gap-6">
+                        <a href="#packages" class="bg-rose-600 text-white px-12 py-6 rounded-full font-black uppercase tracking-widest text-[11px] shadow-[0_20px_40px_rgba(255,0,0,0.3)] hover:scale-105 transition">Explore Packages</a>
+                        <a href="#services" class="liquid-glass px-12 py-6 font-black uppercase tracking-widest text-[11px] hover:bg-white/10">View Strategy</a>
+                    </div>
+                </div>
+                <div class="relative floating" data-aos="zoom-in-left" data-aos-duration="1500">
+                    <div class="liquid-glass p-6">
+                        <img src="WhatsApp Image 2026-01-10 at 22.13.48.jpeg" alt="Success" class="rounded-[40px] grayscale hover:grayscale-0 transition-all duration-1000">
+                    </div>
+                    <div class="absolute -bottom-10 -left-10 liquid-glass p-12 bg-black/60 hidden lg:block shadow-2xl">
+                        <div class="text-5xl font-black text-rose-600 italic">"BUILD IT"</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-2">For Your Business Legacy</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-40 bg-black/20">
+            <div class="max-w-6xl mx-auto px-8">
+                <div class="grid md:grid-cols-2 gap-20 items-center">
+                    <div data-aos="fade-up">
+                        <h2 class="text-5xl md:text-7xl font-black uppercase mb-10 leading-tight glass-text">We Handle The <span class="text-rose-600">Visuals</span>, You Handle The <span class="text-rose-600">Growth</span></h2>
+                    </div>
+                    <div class="space-y-8 text-gray-400 text-lg leading-relaxed" data-aos="fade-up" data-aos-delay="200">
+                        <p>At SPREAD Media, we believe every business deserves a premium digital footprint. Whether it's a neighborhood café or a high-end gym, our goal is simple: to make your brand popular.</p>
+                        <div class="liquid-glass p-8 italic border-l-4 border-l-rose-600">
+                            "We handle your visual identity so you can focus entirely on your business operations."
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="py-40 relative px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-32 gap-10">
+                    <h2 class="text-6xl md:text-9xl font-black uppercase italic glass-text" data-aos="fade-right">Our <br><span class="text-rose-600">Expertise.</span></h2>
+                    <p class="text-gray-500 max-w-sm text-[12px] uppercase tracking-[0.4em] font-black border-r-4 border-rose-600 pr-8 text-right">
+                        Premium color grading, designated posters, and cinematic reels.
+                    </p>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-12">
+                    <div class="liquid-glass p-16 group" data-aos="fade-up">
+                        <div class="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-10 group-hover:bg-rose-600 transition-colors duration-500">
+                            <i class="fas fa-palette text-3xl text-rose-600 group-hover:text-white"></i>
+                        </div>
+                        <h3 class="text-3xl font-black uppercase mb-6 glass-text">Creative Posters</h3>
+                        <p class="text-gray-500 leading-relaxed text-sm mb-8">High-quality static posters and festival templates tailored to your brand colors. We ensure your brand looks consistent across every pixel.</p>
+                        <ul class="text-[10px] font-black uppercase tracking-widest text-rose-500 space-y-2">
+                            <li><i class="fas fa-caret-right mr-2"></i> Custom Themes</li>
+                            <li><i class="fas fa-caret-right mr-2"></i> Color Grading</li>
+                            <li><i class="fas fa-caret-right mr-2"></i> Festival Planning</li>
+                        </ul>
+                    </div>
+
+                    <div class="liquid-glass p-16 group" data-aos="fade-up" data-aos-delay="200">
+                        <div class="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-10 group-hover:bg-rose-600 transition-colors duration-500">
+                            <i class="fas fa-video text-3xl text-rose-600 group-hover:text-white"></i>
+                        </div>
+                        <h3 class="text-3xl font-black uppercase mb-6 glass-text">Dynamic Video</h3>
+                        <p class="text-gray-500 leading-relaxed text-sm mb-8">Engaging Reels and business videos designed to stop the scroll. We capture the essence of your business through cinematic motion.</p>
+                        <ul class="text-[10px] font-black uppercase tracking-widest text-rose-500 space-y-2">
+                            <li><i class="fas fa-caret-right mr-2"></i> IG Reels</li>
+                            <li><i class="fas fa-caret-right mr-2"></i> Product Showcase</li>
+                            <li><i class="fas fa-caret-right mr-2"></i> Storytelling</li>
+                        </ul>
+                    </div>
+
+                    <div class="liquid-glass p-16 group" data-aos="fade-up" data-aos-delay="400">
+                        <div class="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-10 group-hover:bg-rose-600 transition-colors duration-500">
+                            <i class="fas fa-chart-line text-3xl text-rose-600 group-hover:text-white"></i>
+                        </div>
+                        <h3 class="text-3xl font-black uppercase mb-6 glass-text">Brand Logic</h3>
+                        <p class="text-gray-500 leading-relaxed text-sm mb-8">Maintaining consistency across Instagram, FB, Threads, and WhatsApp. We manage the strategy so you don't have to worry about posting.</p>
+                        <ul class="text-[10px] font-black uppercase tracking-widest text-rose-500 space-y-2">
+                            <li><i class="fas fa-caret-right mr-2"></i> Multi-Platform</li>
+                            <li><i class="fas fa-caret-right mr-2"></i> Voice Consistency</li>
+                            <li><i class="fas fa-caret-right mr-2"></i> Reputation Building</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="clients" class="py-40 relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-8">
+                <div class="mb-24" data-aos="fade-up">
+                    <h2 class="text-[12px] font-black text-rose-600 uppercase tracking-[0.8em] mb-4">Trusted Partners</h2>
+                    <h3 class="text-6xl font-black uppercase italic glass-text">Who's <span class="text-rose-600">Spreading</span>?</h3>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <div class="liquid-glass p-1 group overflow-hidden" data-aos="fade-up">
+                        <div class="relative h-64 overflow-hidden rounded-[35px]">
+                            <img src="WhatsApp Image 2026-01-25 at 19.00.35.jpeg" alt="Cafe Partner" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="absolute bottom-6 left-6">
+                                <span class="bg-rose-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Local bakery</span>
+                                <h4 class="text-2xl font-black mt-2">Nirantara Bakes</h4>
+                            </div>
+                        </div>
+                        <div class="p-8">
+                            <p class="text-gray-400 text-sm mb-6 leading-relaxed">"Spread Media handled our daily posters and festival campaigns, helping us reach potential customer  in via social media "</p>
+                            <div class="flex items-center justify-between border-t border-white/10 pt-6">
+                                <div>
+                                    <div class="text-rose-600 font-black text-lg">+42%</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">social media profile growth</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-white font-black text-lg">Gold</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Active Plan</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass p-1 group overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+                        <div class="relative h-64 overflow-hidden rounded-[35px]">
+                            <img src="The.png" alt="Gym Partner" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="absolute bottom-6 left-6">
+                                <span class="bg-rose-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Homemade cheese cake </span>
+                                <h4 class="text-2xl font-black mt-2">The P's Cheese cake </h4>
+                            </div>
+                        </div>
+                        <div class="p-8">
+                            <p class="text-gray-400 text-sm mb-6 leading-relaxed">"we turned their social media presence into a viral sensation. Our cheese cake posts are now trending in our cities!"</p>
+                            <div class="flex items-center justify-between border-t border-white/10 pt-6">
+                                <div>
+                                    <div class="text-rose-600 font-black text-lg">+12k</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Reel Views</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-white font-black text-lg">silver</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Active Plan</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass p-1 group overflow-hidden" data-aos="fade-up" data-aos-delay="400">
+                        <div class="relative h-64 overflow-hidden rounded-[35px]">
+                            <img src="WhatsApp Image 2026-01-31 at 18.34.13.jpeg" alt="Startup Partner" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="absolute bottom-6 left-6">
+                                <span class="bg-rose-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">commercial buisness</span>
+                                <h4 class="text-2xl font-black mt-2">basaveshwara Borewells</h4>
+                            </div>
+                        </div>
+                        <div class="p-8">
+                            <p class="text-gray-400 text-sm mb-6 leading-relaxed">we transformed their brand presence across all social media platforms. Their consistent voice and design have made them a trusted name in the industry.
+                            </p>
+                            <div class="flex items-center justify-between border-t border-white/10 pt-6">
+                                <div>
+                                    <div class="text-rose-600 font-black text-lg">Consistent</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Brand Voice</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-white font-black text-lg">Platinum</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Active Plan</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="liquid-glass p-1 group overflow-hidden" data-aos="fade-up" data-aos-delay="400">
+                        <div class="relative h-64 overflow-hidden rounded-[35px]">
+                            <img src="WhatsApp Image 2026-01-31 at 18.34.11.jpeg" alt="Startup Partner" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="absolute bottom-6 left-6">
+                                <span class="bg-rose-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Non profit org</span>
+                                <h4 class="text-2xl font-black mt-2">Rotaract club of Mandya</h4>
+                            </div>
+                        </div>
+                        <div class="p-8">
+                            <p class="text-gray-400 text-sm mb-6 leading-relaxed">we managed their social media presence, creating engaging content that resonates with their community and amplifies their mission.
+                            </p>
+                            <div class="flex items-center justify-between border-t border-white/10 pt-6">
+                                <div>
+                                    <div class="text-rose-600 font-black text-lg">Added members </div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">for thier community growth </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-white font-black text-lg">gold</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Active Plan</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="liquid-glass p-1 group overflow-hidden" data-aos="fade-up" data-aos-delay="400">
+                        <div class="relative h-64 overflow-hidden rounded-[35px]">
+                            <img src="jai karntaka parishath.jpeg" alt="Startup Partner" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="absolute bottom-6 left-6">
+                                <span class="bg-rose-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Welfare community </span>
+                                <h4 class="text-2xl font-black mt-2">Jai karnataka parishath</h4>
+                            </div>
+                        </div>
+                        <div class="p-8">
+                            <p class="text-gray-400 text-sm mb-6 leading-relaxed">we enhanced their online presence by crafting compelling content that highlights their initiatives and engages their audience effectively.
+                            </p>
+                            <div class="flex items-center justify-between border-t border-white/10 pt-6">
+                                <div>
+                                    <div class="text-rose-600 font-black text-lg">found like </div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">minded people for thier organisation</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-white font-black text-lg">Platinum</div>
+                                    <div class="text-[10px] uppercase text-gray-500 font-bold tracking-widest">Active Plan</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        <section id="packages" class="py-32 px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-24" data-aos="fade-up">
+                    <h2 class="text-6xl font-black uppercase mb-4 italic tracking-tighter glass-text">The Packages</h2>
+                    <div class="w-24 h-2 bg-rose-600 mx-auto"></div>
+                    <p class="text-gray-500 mt-6 font-bold uppercase tracking-widest text-xs">Choose Your Growth Phase</p>
+                </div>
+
+                <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+                    <div class="liquid-glass p-10 flex flex-col" data-aos="fade-up">
+                        <div class="mb-8">
+                            <span class="text-rose-600 font-black text-xs uppercase tracking-widest">Phase 01</span>
+                            <h4 class="text-3xl font-black uppercase mt-2 glass-text">Starter</h4>
+                            <p class="text-3xl font-bold mt-4">₹5,999/- <span class="text-sm font-normal text-gray-400">/mo</span></p>
+                        </div>
+                        <ul class="space-y-4 text-sm font-medium text-gray-400 mb-10 flex-grow">
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 40 High-Quality Posters</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 10 Bonus Posters</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 1 Engaging Reel /mo</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 7 Animated Posters</li>
+                        </ul>
+                        <a href="https://wa.me/918139931940" class="w-full py-4 text-center rounded-xl bg-white/5 text-white font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition">Get Started</a>
+                    </div>
+
+                    <div class="liquid-glass p-10 flex flex-col" data-aos="fade-up" data-aos-delay="100">
+                        <div class="mb-8">
+                            <span class="text-rose-600 font-black text-xs uppercase tracking-widest">Phase 02</span>
+                            <h4 class="text-3xl font-black uppercase mt-2 glass-text">Bronze</h4>
+                            <p class="text-3xl font-bold mt-4">₹6,999/- <span class="text-sm font-normal text-gray-400">/mo</span></p>
+                        </div>
+                        <ul class="space-y-4 text-sm font-medium text-gray-400 mb-10 flex-grow">
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 40 Posters + 10 Bonus</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 2 Reels per Month</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Animated Product Videos</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Storytelling Content</li>
+                        </ul>
+                        <a href="https://wa.me/918139931940" class="w-full py-4 text-center rounded-xl bg-white/5 text-white font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition">Get Started</a>
+                    </div>
+
+                    <div class="liquid-glass p-10 border-2 border-rose-600 bg-rose-600/5 flex flex-col shadow-2xl scale-105 z-10" data-aos="fade-up" data-aos-delay="200">
+                        <div class="absolute top-0 right-0 bg-rose-600 text-white px-6 py-2 rounded-bl-3xl font-black text-[10px] uppercase tracking-widest">Most Popular</div>
+                        <div class="mb-8">
+                            <span class="text-rose-600 font-black text-xs uppercase tracking-widest">Phase 03</span>
+                            <h4 class="text-3xl font-black uppercase mt-2 glass-text">Silver</h4>
+                            <p class="text-3xl font-bold mt-4">₹7,999/- <span class="text-sm font-normal text-gray-400">/mo</span></p>
+                        </div>
+                        <ul class="space-y-4 text-sm font-black text-white mb-10 flex-grow">
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Full Instagram Management</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Strategy & Planning</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 40 Static + 10 Bonus Posters</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> 2 Reels & 10 Animated Posters</li>
+                        </ul>
+                        <a href="https://wa.me/918139931940" class="w-full py-5 text-center rounded-xl bg-rose-600 text-white font-black text-xs uppercase tracking-widest hover:bg-white hover:text-black transition">Boost Brand Now</a>
+                    </div>
+
+                    <div class="liquid-glass p-10 flex flex-col mt-4" data-aos="fade-up">
+                        <div class="mb-8">
+                            <span class="text-rose-600 font-black text-xs uppercase tracking-widest">Phase 04</span>
+                            <h4 class="text-3xl font-black uppercase mt-2 glass-text">Gold</h4>
+                            <p class="text-3xl font-bold mt-4">₹8,999/- <span class="text-sm font-normal text-gray-400">/mo</span></p>
+                        </div>
+                        <ul class="space-y-4 text-sm font-medium text-gray-400 mb-10 flex-grow">
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> All Platforms (FB, Insta, X, YT)</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Consistency in Voice & Design</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Full Professional Presence</li>
+                        </ul>
+                        <a href="https://wa.me/918139931940" class="w-full py-4 text-center rounded-xl bg-white/5 text-white font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition">Get Started</a>
+                    </div>
+
+                    <div class="liquid-glass p-10 flex flex-col mt-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="mb-8">
+                            <span class="text-rose-600 font-black text-xs uppercase tracking-widest">Phase 05</span>
+                            <h4 class="text-3xl font-black uppercase mt-2 glass-text">Platinum</h4>
+                            <p class="text-3xl font-bold mt-4">₹11,999/- <span class="text-sm font-normal text-gray-400">/mo</span></p>
+                        </div>
+                        <ul class="space-y-4 text-sm font-medium text-gray-400 mb-10 flex-grow">
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Social Management + Website</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> One-time Hostable Website</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Professional Digital Home</li>
+                        </ul>
+                        <a href="https://wa.me/918139931940" class="w-full py-4 text-center rounded-xl bg-white/5 text-white font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition">Get Started</a>
+                    </div>
+
+                    <div class="liquid-glass p-10 flex flex-col mt-4" data-aos="fade-up" data-aos-delay="200">
+                        <div class="mb-8">
+                            <span class="text-rose-600 font-black text-xs uppercase tracking-widest">Ultimate Phase</span>
+                            <h4 class="text-3xl font-black uppercase mt-2 glass-text">Diamond</h4>
+                            <p class="text-3xl font-bold mt-4">₹12,999/- <span class="text-sm font-normal text-gray-400">/mo</span></p>
+                        </div>
+                        <ul class="space-y-4 text-sm font-medium text-gray-400 mb-10 flex-grow">
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Content + Website + Full Maintenance</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Daily Profile Updates</li>
+                            <li><i class="fas fa-check text-rose-600 mr-3"></i> Full Hands-off Responsibility</li>
+                        </ul>
+                        <a href="https://wa.me/918139931940" class="w-full py-4 text-center rounded-xl bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-rose-600 hover:text-white transition">Get Started</a>
+                    </div>
+                </div>
+
+                <div class="mt-20 grid md:grid-cols-2 gap-8" data-aos="fade-up">
+                    <div class="liquid-glass p-10 bg-rose-600/5 hover:border-rose-600">
+                        <div class="flex justify-between items-start mb-4">
+                            <h5 class="text-2xl font-black uppercase glass-text">Spread Posters</h5>
+                            <span class="text-rose-600 font-black text-xl">₹2,599/-</span>
+                        </div>
+                        <p class="text-sm text-gray-500 leading-relaxed mb-6">Exclusive planning in every aspect possible for your brand posters. Perfect for specific campaigns or monthly refreshers.</p>
+                        <a href="https://wa.me/918139931940" class="text-[10px] font-black uppercase tracking-widest text-rose-600 hover:text-white transition">Inquire Now <i class="fas fa-arrow-right ml-2"></i></a>
+                    </div>
+
+                    <div class="liquid-glass p-10 bg-white/5 hover:border-rose-600">
+                        <div class="flex justify-between items-start mb-4">
+                            <h5 class="text-2xl font-black uppercase glass-text">Spread Reels</h5>
+                            <span class="text-rose-600 font-black text-xl">From ₹3,499/-</span>
+                        </div>
+                        <p class="text-sm text-gray-500 leading-relaxed mb-6">High-quality professional reels designed to stop the scroll and improve your online dominance instantly.</p>
+                        <a href="https://wa.me/918139931940" class="text-[10px] font-black uppercase tracking-widest text-rose-600 hover:text-white transition">Inquire Now <i class="fas fa-arrow-right ml-2"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="onboarding" class="py-40 px-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid md:grid-cols-2 gap-32 items-center">
+                    <div data-aos="fade-right">
+                        <h2 class="text-6xl font-black uppercase mb-16 italic glass-text leading-tight">Getting <br><span class="text-rose-600">Started</span> With Us</h2>
+                        <div class="space-y-12">
+                            <div class="flex space-x-8 items-start group">
+                                <div class="w-16 h-16 rounded-2xl bg-white/5 flex-shrink-0 flex items-center justify-center text-3xl font-black group-hover:bg-rose-600 transition-colors">1</div>
+                                <div>
+                                    <h4 class="text-xl font-black uppercase mb-2">Brand Assets</h4>
+                                    <p class="text-gray-500">Provide your logo and preferred colors to begin the visual identity phase.</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-8 items-start group">
+                                <div class="w-16 h-16 rounded-2xl bg-white/5 flex-shrink-0 flex items-center justify-center text-3xl font-black group-hover:bg-rose-600 transition-colors">2</div>
+                                <div>
+                                    <h4 class="text-xl font-black uppercase mb-2">Visual Vault</h4>
+                                    <p class="text-gray-500">Share high-quality photos of your products or business space.</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-8 items-start group">
+                                <div class="w-16 h-16 rounded-2xl bg-white/5 flex-shrink-0 flex items-center justify-center text-3xl font-black group-hover:bg-rose-600 transition-colors">3</div>
+                                <div>
+                                    <h4 class="text-xl font-black uppercase mb-2">Access & Launch</h4>
+                                    <p class="text-gray-500">Grant account access and share upcoming offer details for the month.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="liquid-glass p-16 relative" data-aos="fade-left">
+    <h3 class="text-3xl font-black mb-8 uppercase glass-text text-center">Inquiry Form</h3>
+    
+    <form id="contactForm" class="space-y-6">
+        <input type="text" id="bizName" placeholder="Business Name" required 
+               class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-rose-600 transition text-white">
+        
+        <input type="email" id="bizEmail" placeholder="Email Address" required 
+               class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-rose-600 transition text-white">
+        
+        <button type="button" onclick="sendMail()" 
+                class="w-full py-6 bg-rose-600 rounded-2xl font-black uppercase tracking-widest hover:bg-white hover:text-rose-600 transition-all duration-500">
+            Send Request
+        </button>
+    </form>
+</div>
+
+<script>
+function sendMail() {
+    const name = document.getElementById('bizName').value;
+    const email = document.getElementById('bizEmail').value;
+    
+    if(!name || !email) {
+        alert("Please fill in both fields.");
+        return;
+    }
+
+    const subject = encodeURIComponent("New Inquiry: SPREAD Media");
+    const body = encodeURIComponent(`Hello SPREAD Media,\n\nI would like to inquire about your services for my business.\n\nBusiness Name: ${name}\nClient Email: ${email}\n\nPlease get back to me with the next steps.`);
+    
+    // This triggers the mailto action
+    window.location.href = `mailto:nehal2572007@gmail.com?subject=${subject}&body=${body}`;
+}
+</script>
+                </div>
+            </div>
+        </section>
+
+        <footer class="bg-black text-white pt-32 pb-12 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20 border-b border-gray-800 pb-20">
+                    <div class="lg:col-span-2">
+                        <div class="text-4xl font-black tracking-tighter uppercase mb-8">SPREAD <span class="text-rose-600">MEDIA</span></div>
+                        <p class="text-gray-500 max-w-sm mb-8 leading-relaxed">"You name it... and we will build it for your business."</p>
+                        <div class="flex space-x-6">
+                            <a href="https://instagram.com/spreadcompany1" class="text-gray-400 hover:text-rose-600 transition text-2xl"><i class="fab fa-instagram"></i></a>
+                            <a href="https://wa.me/918139931940" class="text-gray-400 hover:text-rose-600 transition text-2xl"><i class="fab fa-whatsapp"></i></a>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="font-black uppercase text-xs tracking-[0.3em] mb-8 text-rose-600">Our Services</h5>
+                        <ul class="space-y-4 text-sm font-bold text-gray-400">
+                            <li><a href="#services" class="hover:text-white transition">Content Creation</a></li>
+                            <li><a href="#services" class="hover:text-white transition">Social Media Management</a></li>
+                            <li><a href="#packages" class="hover:text-white transition">Website Development</a></li>
+                            <li><a href="#about" class="hover:text-white transition">Brand Reputation</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-black uppercase text-xs tracking-[0.3em] mb-8 text-rose-600">Contact</h5>
+                        <ul class="space-y-4 text-sm font-bold text-gray-400">
+                            <li>+91 81399 31940</li>
+                            <li>+91 63660 88499</li>
+                            <li>spreadcompany1@gmail.com</li>
+                            <li>Bengaluru Region</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-600">
+                    <div>&copy; 2026 SPREAD MEDIA. ALL RIGHTS RESERVED.</div>
+                    <div class="mt-4 md:mt-0 italic">Service Manager: Nehal S.</div>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ once: true, duration: 1000 });
+
+        function siteEntry() {
+            document.getElementById('entrance-screen').classList.add('exit-active');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Liquid Engine
+        const canvas = document.getElementById('liquid-canvas');
+        const ctx = canvas.getContext('2d');
+        let points = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        class Point {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.radius = Math.random() * 200 + 150;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = points.indexOf(this) % 2 === 0 ? 'rgba(225, 29, 72, 0.4)' : 'rgba(100, 100, 255, 0.05)';
+                ctx.fill();
+            }
+        }
+        for (let i = 0; i < 10; i++) points.push(new Point());
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            points.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', resize);
+        resize(); animate();
+
+        // Cursor Movement
+        const dot = document.getElementById('cursor-dot');
+        const blur = document.getElementById('cursor-blur');
+        window.addEventListener('mousemove', (e) => {
+            dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px';
+            blur.style.left = e.clientX + 'px'; blur.style.top = e.clientY + 'px';
+        });
+    </script>
+</body>
+</html>
